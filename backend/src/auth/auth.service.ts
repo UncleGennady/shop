@@ -4,10 +4,11 @@ import { LoginDto } from './dto/login.dto';
 import { PrismaService } from 'src/prisma.service';
 import { hash, verify } from 'argon2';
 import { JwtService} from '@nestjs/jwt'
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly prisma: PrismaService , private readonly jwt: JwtService) {}
+  constructor(private readonly prisma: PrismaService , private readonly jwt: JwtService, private readonly user: UserService) {}
 
   private async issueTokens(userId: number) {
     const data = {id: userId}
@@ -21,14 +22,6 @@ export class AuthService {
     })
 
     return { accessToken, refreshToken }
-  }
-
-   private async getUser(field: string, value: string) {
-    return this.prisma.user.findUnique({
-      where: {
-        [field]: value,
-      },
-    });
   }
 
   private async createNewUser(dto: RegisterDto) {
@@ -45,33 +38,54 @@ export class AuthService {
     });
   }
 
-
+  
   async register(dto:RegisterDto ) {
-    const existUser = await this.getUser('email', dto.email)
+    const existUser = await this.user.getUser('email', dto.email, {
+      id: true,
+      createdAt: true,
+      updateAt: true,
+      email: true,
+      password: false,
+      name: true,
+      avatarPath: true,
+      role:true,
+      phone: true,
+      reviews: true,
+      favorites: true,
+      })
 
     if(existUser) throw new BadRequestException('User already exists')
 
     const user = await this.createNewUser(dto)
 
-    const {password, ...res} = user
 
     const tokens = await this.issueTokens(user.id)
-
+      console.log(existUser)
     return {
-      ...res,
+      ...user,
       ...tokens
     }
   }
   
 
   async login(dto: LoginDto ) {
-    const user = await this.getUser('email', dto.email)
-
-    if(!user && !verify(user.password, dto.password)) throw new ForbiddenException('Wrong login or password')
+    const user = await this.user.getUser('email', dto.email,{
+      id: true,
+      createdAt: true,
+      updateAt: true,
+      email: true,
+      password: true,
+      name: true,
+      avatarPath: true,
+      role:true,
+    })
+    
+    
+    if(!user || ! await verify(user.password.toString(), dto.password)) throw new ForbiddenException('Wrong login or password')
     
     const {password, ...res} = user
     
-    const tokens = await this.issueTokens(user.id)
+    const tokens = await this.issueTokens(+user.id)
 
     return {
       ...res,
