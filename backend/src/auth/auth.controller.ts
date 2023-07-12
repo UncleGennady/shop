@@ -3,11 +3,11 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { Auth } from 'src/decorator/auth.decorator';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-  
   @HttpCode(200)
   @Post('register')
   async register(@Body() dto: RegisterDto){
@@ -15,6 +15,7 @@ export class AuthController {
   }
 
   @HttpCode(200)
+  @Auth()
   @Post('login/access-token')
   async getNewTokens(@Body() dto:RefreshTokenDto){
     return this.authService.getNewToken(dto.refreshToken)
