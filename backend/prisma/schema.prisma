@@ -15,14 +15,15 @@ model User {
   password   String
   name       String
   avatarPath String       @default("/upload/default-avatar.png")
-  role       UserRoleEnum @default(USER)
+  role       UserRoleEnum[] @default([USER])
   phone      String       @default("")
   orders     Order[]
   reviews    Review[]
+  response   ReviewResponse[]
   favorites  Product[]
 }
 
-enum UserRoleEnum {
+ enum UserRoleEnum {
   USER
   ADMIN
   MODERATOR
@@ -58,12 +59,24 @@ model Review {
   id          Int          @id @default(autoincrement())
   createdAt   DateTime     @default(now()) @map("created_at")
   updateAt    DateTime     @updatedAt @map("updated_at")
-  rating      Int    
+  rating      Int?   
   text        String
   author      User        @relation(fields: [userId], references: [id])
   userId      Int         @map("user_id")
   product     Product     @relation(fields: [productId], references: [id])
   productId   Int         @map("product_id")
+  responses   ReviewResponse[]
+}
+
+model ReviewResponse {
+  id          Int          @id @default(autoincrement())
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updateAt    DateTime     @updatedAt @map("updated_at")
+  text        String
+  author      User        @relation(fields: [userId], references: [id])
+  userId      Int         @map("user_id")
+  review      Review      @relation(fields: [reviewId], references: [id])
+  reviewId    Int         @map("review_id")
 }
 
 model Order {

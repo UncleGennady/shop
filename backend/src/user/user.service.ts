@@ -3,6 +3,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma.service';
 import { hash, verify} from 'argon2';
 import { Prisma } from '@prisma/client';
+import { prismaGetBy } from 'src/utils/prisma-get-by';
 
 @Injectable()
 export class UserService {
@@ -42,15 +43,19 @@ export class UserService {
       ...isSomeUser}
   }
 
-  getUser<T>(field: string, value: T, select) {
-    return this.prisma.user.findUnique({
-      where: {
-        [field]: value,
+//  async getUser<T>(field: string, value: T, select: Prisma.UserSelect) {
+
+//     return await this.prisma.user.findUnique({
+//       where: {
+//         [field]: value,
         
-      },
-       select
-    });
-  }
+//       },
+//        select
+//     });
+//   }
+
+  getUser = prismaGetBy<Prisma.UserSelect>(this.prisma.user)
+
 
   async updateProfile(id: number, dto: UpdateUserDto) {
 
@@ -65,9 +70,7 @@ export class UserService {
     const {password: oldPassword } = await this.getUser('id', id, {
       password: true
     })
-  //   const user = await this.getUser('id', id, { password: true });
-  // const oldPassword = user.password;
-    
+ 
     return this.prisma.user.update({
       where:{
         id
@@ -85,15 +88,13 @@ export class UserService {
   async toggleFavorite(id:number, productId:number){
 
     const isSomeUser = await this.getUser('id', id, {
-      select: {
-        id: true,
-        favorites: true
-      }
+      id: true,
+      favorites:true
     })
 
     if(!isSomeUser) throw new NotFoundException('User not found!')
 
-
+  
    const isExist = isSomeUser.favorites.some(product => product.id === productId)
   
    await this.prisma.user.update({

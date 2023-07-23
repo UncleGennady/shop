@@ -60,7 +60,6 @@ export class AuthService {
 
 
     const tokens = await this.issueTokens(user.id)
-      console.log(existUser)
     return {
       ...user,
       ...tokens
