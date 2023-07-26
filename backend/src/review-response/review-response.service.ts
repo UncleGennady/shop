@@ -46,9 +46,15 @@ export class ReviewResponseService {
         return responses    
     }
 
-    create(userId, reviewId, dto){
+    async create(userId, reviewId, dto){
 
-        const response = this.prisma.reviewResponse.create({
+        const existReview = await this.review.getReview('id', reviewId, {
+            id:true
+        } ) 
+
+        if(!existReview) throw new NotFoundException("Review not found!")
+    
+        const response = await this.prisma.reviewResponse.create({
             data:{
                 ...dto,
                 review:{
@@ -76,7 +82,7 @@ export class ReviewResponseService {
             }
         })
 
-        if(!response) throw new BadRequestException("Review not found!")
+        if(!response) throw new BadRequestException("Review response not found!")
 
         const updatedResponse = await this.prisma.reviewResponse.update({
             where:{
@@ -99,7 +105,7 @@ export class ReviewResponseService {
             }
         })
 
-        if(!response) throw new BadRequestException("Review not found!")
+        if(!response) throw new BadRequestException("Review response not found!")
 
         await this.prisma.reviewResponse.delete({
             where:{

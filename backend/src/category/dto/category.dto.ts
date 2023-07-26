@@ -5,10 +5,5 @@ export class CategoryDto {
     @IsString()
     name: string
 
-    @IsString()
-    description: String 
-
-    price:Number     
-
 
 }
